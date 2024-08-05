@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.news-card {
+    @apply transition-transform duration-300 ease-in-out;
+  }
+  
+.news-card:hover {
+    @apply scale-105;
+  }
+  html {
+    background-color: #ffffff; /* Fondo claro por defecto */
+  }
+  
+  html.dark {
+    background-color: #1a202c; /* Fondo oscuro cuando dark mode está activado */
+  }
+  html {
+    scroll-behavior: smooth; /* Esto habilita el scroll suave en toda la página */
+  }
