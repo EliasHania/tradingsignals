@@ -118,6 +118,28 @@ const CryptoInfo = () => {
           <span className="absolute inset-0 bg-gradient-to-r from-blue-500 to-green-500 opacity-50 rounded-full animate-pulse"></span>
         </span>
       </p>
+      {/* Recommendations Active */}
+      <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">
+        Recommendations Active
+      </h2>
+
+      <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-sm">
+        {data.buySignal && (
+          <p className="text-lg text-green-700 dark:text-green-300">
+            Active Long (Buy): Consider maintaining your long position.
+          </p>
+        )}
+        {data.sellSignal && (
+          <p className="text-lg text-red-700 dark:text-red-300">
+            Active Short (Sell): Consider maintaining your short position.
+          </p>
+        )}
+        {!data.buySignal && !data.sellSignal && (
+          <p className="text-lg text-gray-700 dark:text-gray-300">
+            No active recommendations at the moment.
+          </p>
+        )}
+      </div>
       <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">
         Trading Recommendations
       </h2>

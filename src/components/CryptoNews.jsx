@@ -1,16 +1,17 @@
-// src/components/CryptoNews.jsx
 import React, { useEffect, useState } from "react";
 import Slider from "react-slick";
 import { getCryptoNews } from "../services/cryptoNewsService";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
+// Decodificar entidades HTML
 const decodeHTML = (html) => {
   const txt = document.createElement("textarea");
   txt.innerHTML = html;
   return txt.value;
 };
 
+// Flechas personalizadas para el Slider
 const CustomNextArrow = (props) => {
   const { onClick } = props;
   return (
@@ -37,24 +38,81 @@ const CustomPrevArrow = (props) => {
 
 const CryptoNews = () => {
   const [news, setNews] = useState([]);
-  const defaultImage = "/Twitter-X.webp"; // Ruta de la imagen predeterminada
-  const blockworksImage = "/blockworks.webp"; // Ruta de la imagen específica para Blockworks
+  const defaultImage = "/Twitter-X.webp";
+  const blockworksImage = "/blockworks.webp";
+  const chatId = "-1002170921608";
+  const botToken = "7254744488:AAGvyH2qzAPm70E-fyKGCg20uSl2MZSPDcA";
+
+  const MAX_NEWS_COUNT = 600; // Máximo número de noticias que quieres almacenar
+  const CLEANUP_COUNT = 300; // Número de noticias a eliminar cuando se alcanza el límite
+
+  // Función para enviar noticias a Telegram
+  const sendToTelegram = (article) => {
+    const message = `
+      📰 *${decodeHTML(article.title)}*
+      🌐 [Read more](${article.url})
+      🗓️ *Date:* ${new Date(article.updated_at * 1000).toLocaleDateString()}
+    `;
+
+    fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text: message,
+        parse_mode: "Markdown",
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {})
+      .catch((error) => {
+        console.error("Error sending message to Telegram:", error);
+      });
+  };
+
+  // Función para verificar y enviar noticias nuevas
+  const handleNewNews = (articles) => {
+    let sentNewsUrls = JSON.parse(localStorage.getItem("sentNewsUrls")) || [];
+
+    articles.forEach((article) => {
+      if (!sentNewsUrls.includes(article.url)) {
+        sendToTelegram(article);
+        sentNewsUrls.push(article.url);
+      }
+    });
+
+    // Si el número de noticias almacenadas supera el límite, eliminar las más antiguas
+    if (sentNewsUrls.length > MAX_NEWS_COUNT) {
+      sentNewsUrls = sentNewsUrls.slice(CLEANUP_COUNT);
+    }
+
+    // Guardar las URLs actualizadas en localStorage
+    localStorage.setItem("sentNewsUrls", JSON.stringify(sentNewsUrls));
+  };
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
         const newsData = await getCryptoNews();
-        const sortedNews = newsData.data.sort(
+
+        // Accede al array de noticias
+        const newsArray = newsData.data || []; // Accede a 'data' para obtener el array
+        const sortedNews = newsArray.sort(
           (a, b) => b.updated_at - a.updated_at
         );
         setNews(sortedNews);
+
+        // Verificar y enviar solo noticias nuevas
+        handleNewNews(sortedNews);
       } catch (error) {
         console.error("Error fetching news:", error);
       }
     };
 
     fetchNews();
-    const intervalId = setInterval(fetchNews, 60000);
+    const intervalId = setInterval(fetchNews, 60000); // Se ejecuta cada 60 segundos
     return () => clearInterval(intervalId);
   }, []);
 
